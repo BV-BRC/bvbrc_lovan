@@ -18,6 +18,10 @@ CLIENT_TESTS = $(wildcard t/client-tests/*.t)
 SERVER_TESTS = $(wildcard t/server-tests/*.t)
 PROD_TESTS = $(wildcard t/prod-tests/*.t)
 
+LOVAN_PERL = $(wildcard Viral_Annotation/*.pl)
+LOVAN_BIN = $(addprefix $(BIN_DIR)/,$(notdir $(LOVAN_PERL)))
+LOVAN_DEPLOY = $(addprefix $(TARGET)/bin/,$(notdir $(LOVAN_PERL)))
+
 STARMAN_WORKERS = 8
 STARMAN_MAX_REQUESTS = 100
 
@@ -27,32 +31,27 @@ TPAGE_ARGS = --define kb_top=$(TARGET) --define kb_runtime=$(DEPLOY_RUNTIME) --d
 	--define kb_starman_workers=$(STARMAN_WORKERS) \
 	--define kb_starman_max_requests=$(STARMAN_MAX_REQUESTS)
 
-all: bin 
+SOURCE_REPO = https://github.com/olsonanl/jdavis_lovan
+#SOURCE_REPO = https://github.com/jimdavis1/Viral_Annotation
+REPO_DIR = Viral_Annotation
 
-bin: $(BIN_PERL) $(BIN_SERVICE_PERL)
+all: pull-repo bin
+
+pull-repo: $(REPO_DIR)
+	rm -rf $(REPO_DIR)
+	git clone --depth 1 $(SOURCE_REPO) $(REPO_DIR)
+
+bin: $(BIN_PERL) $(BIN_SERVICE_PERL) $(LOVAN_BIN)
+
+$(BIN_DIR)/%: Viral_Annotation/% $(TOP_DIR)/user-env.sh
+	$(WRAP_PERL_SCRIPT) '$$KB_TOP/modules/$(CURRENT_DIR)/$<' $@
+
 
 deploy: deploy-all
 deploy-all: deploy-client 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
 deploy-service: deploy-libs deploy-scripts deploy-service-scripts deploy-specs
-
-deploy-specs:
-	mkdir -p $(TARGET)/services/$(APP_SERVICE)
-	rsync -arv app_specs $(TARGET)/services/$(APP_SERVICE)/.
-
-deploy-service-scripts:
-	export KB_TOP=$(TARGET); \
-	export KB_RUNTIME=$(DEPLOY_RUNTIME); \
-	export KB_PERL_PATH=$(TARGET)/lib ; \
-	for src in $(SRC_SERVICE_PERL) ; do \
-	        basefile=`basename $$src`; \
-	        base=`basename $$src .pl`; \
-	        echo install $$src $$base ; \
-	        cp $$src $(TARGET)/plbin ; \
-	        $(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
-	done
-
 
 deploy-dir:
 	if [ ! -d $(SERVICE_DIR) ] ; then mkdir $(SERVICE_DIR) ; fi
