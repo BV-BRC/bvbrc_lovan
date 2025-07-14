@@ -29,10 +29,11 @@ my ($opt, $usage) = describe_options("%c %o [< in] [> out]",
 
 				     ["ambiguous=f"   => "Fraction of ambiguous bases, (Default = 0.01)", { default => 0.01 }],
 				     
-				     ["json=s", "Output JSON file"],
-				     ["text=s", "Output text file"],
 				     ["parallel=i", "Number of threads to use", { default => 1 }],
 				     ["help|h", "Print this help message"]);
+
+
+print($usage->text), exit 0 if $opt->help;
 
 my @stage_params;
 
@@ -91,6 +92,7 @@ if ($opt->out)
     push(@$params, "--out", $opt->out);
 }
 push(@$params,
+     "--prefix", $opt->prefix,
      "--ambiguous", $opt->ambiguous);
 push(@stage_params, $params);
 
@@ -134,7 +136,7 @@ sub intersperse {
     for my $item (@list) {
 	push(@out, $sep, $item);
 	(my $prog = $item->[0]) =~ s/\.pl$//;
-	push(@out, "2>", "log.$prog");
+	push(@out, "2>", "$prefix.stderr.$prog");
     }
     return @out;
 }
