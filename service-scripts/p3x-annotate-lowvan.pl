@@ -1,7 +1,7 @@
 #
-# Annotate a viral genome using lovan
+# Annotate a viral genome using LowVan
 #
-# This is a wrapper to call the component scripts that make up the lovan service.
+# This is a wrapper to call the component scripts that make up the LowVan service.
 #
 
 use strict;
