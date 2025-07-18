@@ -18,12 +18,12 @@ CLIENT_TESTS = $(wildcard t/client-tests/*.t)
 SERVER_TESTS = $(wildcard t/server-tests/*.t)
 PROD_TESTS = $(wildcard t/prod-tests/*.t)
 
-LOVAN_PERL = $(wildcard Viral_Annotation/*.pl)
-LOVAN_BIN = $(addprefix $(BIN_DIR)/,$(notdir $(LOVAN_PERL)))
-LOVAN_DEPLOY = $(addprefix $(TARGET)/bin/,$(notdir $(LOVAN_PERL)))
+LOWVAN_PERL = $(wildcard Viral_Annotation/*.pl)
+LOWVAN_BIN = $(addprefix $(BIN_DIR)/,$(notdir $(LOWVAN_PERL)))
+LOWVAN_DEPLOY = $(addprefix $(TARGET)/bin/,$(notdir $(LOWVAN_PERL)))
 
-LOVAN_BUILD_DATA = $(shell realpath $(TOP_DIR)/modules/bvbrc_lovan/$(REPO_DIR))
-LOVAN_DEPLOY_DATA = $(shell realpath $(TARGET))/services/bvbrc_lovan/$(REPO_DIR)
+LOWVAN_BUILD_DATA = $(shell realpath $(TOP_DIR)/modules/bvbrc_lowvan/$(REPO_DIR))
+LOWVAN_DEPLOY_DATA = $(shell realpath $(TARGET))/services/bvbrc_lowvan/$(REPO_DIR)
 
 STARMAN_WORKERS = 8
 STARMAN_MAX_REQUESTS = 100
@@ -34,7 +34,7 @@ TPAGE_ARGS = --define kb_top=$(TARGET) --define kb_runtime=$(DEPLOY_RUNTIME) --d
 	--define kb_starman_workers=$(STARMAN_WORKERS) \
 	--define kb_starman_max_requests=$(STARMAN_MAX_REQUESTS)
 
-SOURCE_REPO = https://github.com/olsonanl/jdavis_lovan
+SOURCE_REPO = https://github.com/olsonanl/jdavis_lowvan
 #SOURCE_REPO = https://github.com/jimdavis1/Viral_Annotation
 REPO_DIR = Viral_Annotation
 
@@ -46,12 +46,12 @@ $(REPO_DIR):
 	rm -rf $(REPO_DIR)
 	git clone --depth 1 $(SOURCE_REPO) $(REPO_DIR)
 
-bin: $(BIN_PERL) $(BIN_SERVICE_PERL) $(LOVAN_BIN)
-	echo $(LOVAN_BUILD_DATA) $(LOVAN_BIN)
+bin: $(BIN_PERL) $(BIN_SERVICE_PERL) $(LOWVAN_BIN)
+	echo $(LOWVAN_BUILD_DATA) $(LOWVAN_BIN)
 
 $(BIN_DIR)/%: Viral_Annotation/% $(TOP_DIR)/user-env.sh
-	WRAP_VARIABLES=LOVAN_DATA_DIR; \
-	LOVAN_DATA_DIR=$(LOVAN_BUILD_DATA); \
+	WRAP_VARIABLES=LOWVAN_DATA_DIR; \
+	LOWVAN_DATA_DIR=$(LOWVAN_BUILD_DATA); \
 	$(WRAP_PERL_SCRIPT) '$$KB_TOP/modules/$(CURRENT_DIR)/$<' $@
 
 
@@ -59,23 +59,23 @@ deploy: deploy-all
 deploy-all: deploy-client 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
-deploy-service: deploy-lovan deploy-libs deploy-scripts deploy-service-scripts deploy-specs
+deploy-service: deploy-lowvan deploy-libs deploy-scripts deploy-service-scripts deploy-specs
 
 #
 # Here we need to deploy the underlying annotation scripts.
 #
-deploy-lovan:
-	export WRAP_VARIABLES=LOVAN_DATA_DIR;  \
-	export LOVAN_DATA_DIR=$(LOVAN_DEPLOY_DATA); \
-	for src in $(LOVAN_PERL) ; do \
+deploy-lowvan:
+	export WRAP_VARIABLES=LOWVAN_DATA_DIR;  \
+	export LOWVAN_DATA_DIR=$(LOWVAN_DEPLOY_DATA); \
+	for src in $(LOWVAN_PERL) ; do \
 	        basefile=`basename $$src`; \
 	        base=`basename $$src .pl`; \
 	        echo install $$src $$base ; \
 	        cp $$src $(TARGET)/plbin ; \
 	        $(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base.pl ; \
 	done
-	mkdir -p $(LOVAN_DEPLOY_DATA)
-	rsync -ar --delete $(REPO_DIR)/. $(LOVAN_DEPLOY_DATA)/.
+	mkdir -p $(LOWVAN_DEPLOY_DATA)
+	rsync -ar --delete $(REPO_DIR)/. $(LOWVAN_DEPLOY_DATA)/.
 
 deploy-dir:
 	if [ ! -d $(SERVICE_DIR) ] ; then mkdir $(SERVICE_DIR) ; fi
